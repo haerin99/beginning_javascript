@@ -135,3 +135,5 @@ function factorial2(n) {  // Another version using a different loop
     
 }
 
+2+3;
+
