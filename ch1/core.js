@@ -1,5 +1,5 @@
 // Beginning JavaScript by David Flanagan
-// Ch 1
+// Ch 1.1
 
 var x;              // Declare variable named x
 x = 0;              // Assign value to variable
@@ -128,12 +128,31 @@ function abs(x) {   // Function to compute absolute value
 
 function factorial2(n) {  // Another version using a different loop
     var i, product = 1;   // Start with 1
-    for (i=2; i <= n, i++) {  // Automatically increment i from 2 up to n
+    for(i=2; i <= n; i++)  // Automatically increment i from 2 up to n
         product *= i;         // Do this each time. {} not needed for 1-line loops
-    }
     return product;       // Return the factorial
-    
 }
+factorial2(5);            // => 120; 1*2*3*4*5
 
-2+3;
+// Define a constructor function to initialize a new Point object
+function Point(x,y) {     // By convention, constructors start with capitals
+    this.x = x;           // this keyword is the new object being initialized
+    this.y = y;           // Store function arguments as object properties
+}                         // No return is necessary
+
+// Use a constructor function with the keyword "new" to create instances
+var p = new Point(1,1);   // Geometric point (1,1)
+
+// Define methods for Point objects by assigning them to prototype
+// object associated with constructor function
+Point.prototype.r = function() {  
+    return Math.sqrt(     // Return square root of x^2 + y^2
+        this.x * this.x + // This is the Point object on which the method...
+        this.y * this.y   // ... is invoked.
+    );
+};
+
+// Now the Point object p (and all future Point objects) inherits the 
+// method r()
+p.r()                     // => 1.414...
 
