@@ -378,10 +378,360 @@ o.y = 3;               // Mutate it again by adding a new property
 var a = [1,2,3]        // Arrays are also mutable
 a[0] = 0;              // Change value of array element
 a[3] = 4;              // Add a new array element
+// Objects are not compared by value
+var o = {x:1}, p = {x:1}; // Two objects with same properties
+o == p                    // => false: distinct objects are never equal
+var a = [], b = [];       // Two distinct, empty arrays
+a == b                    // => false: distinct arrays are never equal
+/* Objects are reference types. Object values are references. Objects
+are compared by reference. */
+var a = [];  // Variable a refers to empty array.
+var b = a;   // b refers to same array; does not create copy of object
+b[0] = 1;    // Mutate array referred to by variable b.
+a[0]         // => 1: the change is also visible through variable a
+a == b       // => true: a and b refer to same object; they are equal
+/* Make a copy of an object or array
+    * Explicitly copy properties of object or elements of array */
+var a = ['a', 'b', 'c'];   // Array we want to copy
+var b = [];                   // Distinct array we'll copy into
+for(var i = 0; i < a.length; i++) { // For each index of a[]
+    b[i] = a[i];                    // Copy element of a into b
+}
+/* Compare two distinct objects or arrays
+    * Compare their properties or elements */
+function equalArrays(a,b) {
+    if (a.length != b.length) return false; // Different-size arrays not equal
+    for(var i = 0; i < a.length; i++)   // Loop through all elements
+        if (a[i] !== b[i]) return false;  // If any differ, arrays not equal
+    return true;                          // Otherwise equal
+}
 
+// Type conversions
+10 + " objects"  // => "10 objects": Number 10 converts to a string
+"7" * "4"       // => 28: Both strings convert to numbers
+var n = 1 - "x";  // => NaN: String "x" can't convert to a number
+n + " objects"   // => "NaN objects": NaN converts to string "NaN"
+/* Primitive-to-primitive conversions: string, number, boolean, object
+* undefined -> NaN, false
+* null -> 0, false
+* true -> 1
+* "" -> 0, false
+* "one" -> NaN, true
+* 0, -0 -> false
+* NaN -> false, new Number(NaN)
+* Infinity, -Infinity -> true
+* 1 -> true
+* [] -> 0, true
+* [9] -> 9, true
+* ['a'] -> use join() method, NaN, true
+* function(){} -> NaN, true */
+/* Primitive-to-object conversions: primitive values convert to their wrapper
+object as if by calling String(), Number(), Boolean() constructor.
+    * Exceptions are null, undefined: TypeError exception; Object() function
+    returns newly created empty object {} */
 
+// Conversions and equality
+// The following are true
+null == undefined // treated as equal
+"0" == 0      // String, Boolean convert to number before comparing
+0 == false
+"0" == false
+// Convertibility of one value to another does not imply equality
 
+/* Explicit conversions
+    * Boolean(), Number(), String(), Object() functions are constructors for
+    wrapper objects
+    * When invoked without new operator, they work as conversion functions
+*/
+Number("3")    // => 3
+String(false)  // => "false" Or use false.toString()
+Boolean([])    // => true
+Object(3)      // => new Number(3)
+// Operators perform implicit type conversions
+x + "" // + operand; same as String()
++x     // Unary + operand; same as Number(x). May also see x-0
+!!x    /* Unary ! operator converts operand to boolean and negates it; same 
+        as Boolean(x). */
+/* toString() method defined by Number class accepts optional argument that
+specifies base (between 2 and 36) for conversion. Otherwise, base 10. */
+var n = 17;
+binary_string = n.toString(2);       // Evaluates to "10001"
+octal_string = "0" + n.toString(8);  // Evaluates to "021"
+hex_string = "0x" + n.toString(16);  // Evaluates to "0x11"
+/* number-to-string conversions
+    * toFixed() converts number to string with a specified number of digits
+    after decimal point; no exponential notation
+    * toExponential() converts number to string using exponential notation
+    * toPrecision() converts number to string with number of significant digits
+    specified; exponential notation if number of sig digits is not large 
+    enough to display entire int portion of number */
+var n = 123456.789;
+n.toFixed(0);        // "123457"
+n.toFixed(2);        // "123456.79"
+n.toFixed(5);        // "123456.789000"
+n.toExponential(1);  // "1.2e+5"
+n.toExponential(3);  // "1.235e+5"
+n.toPrecision(4);    // "1.235e+5"
+n.toPrecision(7);    // "123456.8"
+n.toPrecision(10);   // "123456.7890"
+/* string-to-number conversions
+    * Number() conversion function attempts to parse string as integer or float.
+    Only works for base-10 ints. 
+    * parseInt() parses only integers. Interprets strings that begin with "0x"
+    or "0X" as a hexadecimal numbers.
+    * parseFloat() parses both integers and floating-point numbers
+    * parseInt(), parseFloat() skip whitespace, parse as many numeric characters
+    as they can, ignore trailing. If first nonspace character is not part of 
+    valid numeric literal, return NaN. */
+parseInt("3 blind mice")     // => 3
+parseFloat(" 3.14 meters")   // => 3.14
+parseInt("-12.34")           // => -12
+parseInt("0xFF")             // => 255
+parseInt("0xff")             // => 255
+parseInt("-0XFF")            // => -255
+parseFloat(".1")             // => 0.1
+parseInt("0.1")              // => 0
+parseInt(".1")               // => NaN: integers can't start with "."
+parseFloat("$72.47");        // => NaN: numbers can't start with "$”
+/* parseInt() accepts optional second arg specifying radix (base) of number
+to be parsed (2 to 36) */
+parseInt("11", 2);           // => 3 (1*2 + 1)
+parseInt("ff", 16);          // => 255 (15*16 + 15)
+parseInt("zz", 36);          // => 1295 (35*36 + 35)
+parseInt("077", 8);          // => 63 (7*8 + 7)
+parseInt("077", 10);         // => 77 (7*10 + 7)”
 
-// Object to primitive conversions
+/* Object to primitive conversions
+    * Object-to-boolean: All objects (incl arrays, functions) convert to true. 
+    Also for wrapper objects; new Boolean(false) is an object, so it converts 
+    to true.
+    * Object-to-string, object-to-number: Invoke method of object to be 
+    converted. */
+/* All native objects inherit 2 conversion methods:
+    1. toString() returns string representation of object. Classes define more
+    specific versions of the method. The toString() method of...
+        a. Array class: converts each array element to string, joins resulting
+        strings together with commas
+        b. Function class: returns implementation-defined representation of
+        function (i.e. strings of JavaScript source code)
+        c. Date class: returns human-readable (& JavaScript-parsable) date and
+        time string.
+        d. RegExp class: converts RegExp objects to string that looks like
+        RegExp literal... 
+    2. valueOf() is supposed to convert object to primitive value that 
+    represents the object if primitive value exists; returns object itself 
+        a. Wrapper classes define valueOf() methods that return wrapped
+        primitive value
+        b. Arrays, functions, regular expressions inherit default method 
+        c. Date class defines valueOf() method that returns date in internal
+        representation: number  of milliseconds since January 1, 1970 */
+// toString()
+[1,2,3].toString()                // => "1,2,3"
+(function(x) {                    // => "function(x) {\nf(x);\n}"
+f(x);
+}).toString();   
+new Date(2010,0,1).toString();    //'Fri Jan 01 2010 00:00:00 GMT-0500 (Eastern Standard Time)'
+/\d+/g.toString()                 // "/\\d+/g"
+// valueOf()
+var d = new Date(2010, 0, 1);     // Fri Jan 01 2010 00:00:00 GMT-0500 (Eastern Standard Time)
+d.valueOf()                       // => 1262332800000
+/* object-to-string conversion
+    * If obj has toString() method, JavaScript calls it. If returns primitive
+    value, JavaScript converts value to string and returns result.
+    * If obj has no toString() method or if method does not return primitive
+    value, then JavaScript looks for valueOf() method. If method exists, 
+    JavaScript calls it. If return value is a primitive, JavaScript converts
+    that value to a string and returns converted value. 
+    * Otherwise, JavaScript cannot obtain primitive value; throws typeError
+* object-to-number conversion
+    * If object has valueOf() method that returns primitive value, JavaScript
+    converts value to number and returns result.
+    * Otherwise, if object has toString() method that returns primitive value,
+    JavaScript converts and returns the value.
+    * Otherwise, JavaScript throws TypeError. 
+    * So, empty array converts to number 0; array with single element converts
+    to a number. 
+*/
+/* + operator performs numeric addition, string concatenation.
+    * If either operand is object, JavaScript converts object using special
+    object-to-primitive conversion (rather than object-to-number conversion 
+    used by other arithmetic operators)
+* == equality operator is similar
+    * If asked to compare object with primitive value, converts obj using
+    object-to-primitive conversion.
+* Special case for Date objects
+    * object-to-string conversion (toString() first) for Date objects
+    * object-to-number conversion (valueOf() first) for all objects that are
+    not dates 
+    * Returned primitive value is forced to a number or string
+* < operator and other relational operators perform object-to-primitive
+conversions like == does, but without special case for Date objects
+    * Any obj is converted by trying valueOf() first, then toString()
+    * Whatever primitive value obtained is used directly.
+* +, ==, !=, and relational operators are only ones that perform special
+string-to-primitive conversions. Other operators convert explicitly to 
+specified type and do not have special case for Date objects.
+    * - operator converts operands to numbers */
+var now = new Date();    // Create Date object
+typeof (now + 1)         // => "string": + converts dates to strings
+typeof (now - 1)         // => "number": - uses object-to-number conversion
+now == now.toString()    // => true: implicit and explicit string conversions
+now > (now - 1)          // => true: > converts Date to number
 
+// Variable declaration
+var i;                     // var keyword
+var sum;
+var i, sum;                // Declare multiple variables
+var message = "hello";     // Combine variable declaration with initialization
+var i = 0, j = 0, k = 0;
+for(var i = 0; i < 10; i++) console.log(i);   // can be part of for loop
+for(var i = 0, j = 10; i < 10; i++, j--) console.log(i*j);
+for(var p in o) console.log(p);
+// JavaScript variable can hold value of any type
+var i = 10;
+i = "ten";
+
+/* Repeated and omitted declarations
+* Error if... 
+    * attempt to read value of undeclared variable
+    * assign value to undeclared variable
+* In non-strict mode, if assign value to undeclared variable, JavaScript
+creates that variable as property of global object; works like properly
+declared global variable. But this is bad habit and causes bugs. Always
+declare variables with var. */
+
+/* Variable scope
+    * Scope of variable: region of program source code in which it is defined
+    * Global variable has global scope; defined everywhere in JavaScript code
+    * Local variables have local scope
+        * Variables declared within function, function parameters are defined 
+        only within body of function
+        * Takes precedence over global variable with same name */
+var scope = "global";           // Declare global variable
+function checkscope() {
+    var scope = "local";        // Declare local variable with same name
+    return scope                // Return local value, not global one
+}
+checkscope()                    // => "local"
+// Must use var to declare local variables
+scope = "global";               // Declare global variable, even without var
+function checkscope2() {
+    scope = "local";            // Oops, changed global variable
+    myscope = "local";          // Implicitly declares new global variable
+    return [scope, myscope];    // Return two values.
+}
+checkscope2()                   // => ["local", "local"]: has side effects!
+scope                           // => "local": global variable has changed.
+myscope                         // => "local": global namespace cluttered
+// Nested function definitions
+var scope = "global scope";     // global variable
+function checkscope() {         
+    var scope = "local scope";  // local variable
+    function nested() {
+        var scope = "nested scope";  // Nested scope of local variables
+        return scope;                // Return value in scope here
+    }
+    return nested();      // Must return nested function to see returned value
+}
+checkscope()                    // => "nested scope"
+
+/* Function scope and hoisting
+    * JavaScript uses function scope, not block scope
+    * Function scope: variables are visible within function in which they are
+    defined and within any functions that are nested within that function
+        * Some programmers declare all variables at top of function, rather
+        than closer to point at which they are used
+    * Block scope: Each block of code within curly braces has its own scope;
+    variables are not visible outside of block in which they are declared
+        * Good practice to declare variables as close as possible to where they
+        are used with narrowest possible scope
+*/
+// i, j, k have same scope
+function test(o) {
+    var i = 0;         // i is defined throughout function
+    if (typeof o == "object") {
+        var j = 0;     // j is defined everywhere, not just block
+        for(var k=0; k < 10; k++) { // k is defined everywhere, not just loop
+            console.log(k);         // k is still defined: prints 10 
+        }
+        console.log(j);             // j is defined, but may not be initialized
+    }
+    console.log(k);               // => 10
+}
+/* hoisting: JavaScript behaves as if all variable declarations in a function
+(but not associated assignments) are "hoisted" to the top of the function. */
+var scope = "global";
+function f() {
+    console.log(scope);   // Prints "undefined", not "global"
+    var scope = "local";  // Variable initialized here, but defined everywhere
+    console.log(scope);   // Prints "local"
+}
+
+/*  Local variables declared within a function are visible throughout 
+function body and before they are declared; they are defined throughout. 
+Global variable by same name is hidden throughout function.
+* Local variable is not actually initialized until var statement is
+executed. */
+// Function equivalent to test(o)
+function f() {
+    var scope;            // Local variable declared at top of function
+    console.log(scope);   // Exists here, but still has "undefined" value
+    scope = "local";      // Initialize it and give it a value
+    console.log(scope);   // Has expected value
+}
+
+/* Variables as properties
+    * Declaring global JavaScript variable is same as defining property of 
+    global object. If you use var to declare variable, property that is created 
+    is nonconfigurable (cannot be deleted with delete operator)
+    * If assign value to undeclared variable in non-strict mode, JavaScript 
+    automatically creates global variable. Variables created in this way are
+    regular, configurable properties of global object and can be deleted */
+var truevar = 1;     // Properly declared global variable, nondeleteable
+fakevar = 2;         // Creates deleteable property of global object 
+this.fakevar2 = 3;   // Does same thing 
+delete truevar       // => false: variable not deleted 
+delete fakevar       // => true: variable deleted 
+delete this.fakevar2 // => true: variable deleted
+/* Local variables are properties of an object associated with each function 
+invocation. "call object" (ECMAScript 3) or "declarative environment record" 
+(ECMAScript 5). 
+    * Refer to global object with the this keyword 
+    * No way to refer to object in which local variables are stored */
+
+/* Scope chain 
+    * JavaScript is lexically scoped language: scope of variable is set of
+    source code lines for which variable is defined 
+    * Global variables are defined throughout program. Local variables are 
+    defined throughout function in which they are declared, and also within 
+    any functions nested within that function. 
+    * Think of local variables as properties of some kind of implementation- 
+    defined object. 
+    * Another way to think about variable scope: Every chunk of code has a 
+    scope chain associated with it.
+        * Scope chain: List or chain of objects that defines variables that 
+        are "in scope" for that code. 
+        * Variable resolution: When JavaScript needs to look up value of 
+        variable x, it starts by looking at first object in chain. If obj has 
+        property named x, that value of property is used. Otherwise, JavaScript 
+        continues search with next object in chain, and so on. 
+        * If x is not a property of any objs in scope chain, then x is not in
+        scope for that code -> ReferenceError.
+    * In top-level JavaScript code (i.e., code not contained within any function 
+    definitions), scope chain consists of only global object. 
+    * In non-nested function, scope chain consists of two objects
+        1. Obj that defines function's parameters and local variables 
+        2. Global object 
+    * In nested function, scope chain has 3 or more objs 
+    * How this chain of objs is created: 
+        * When function is defined, it stores scope chain. When function is 
+        invoked, it creates new obj to store local variables, and adds that 
+        new obj to stored scope chain to create new, longer chain that 
+        represents scope for that function invocation. 
+        * For nested functions: each time outer function is called, inner 
+        function is defined again. Since scope chain differs on each 
+        invocation of outer function, inner function will be subtly different 
+        each time it is defined. Code of inner function will be identical on 
+        each invocation of outer function, but scope chain associated with 
+        that code will be different. */
 
