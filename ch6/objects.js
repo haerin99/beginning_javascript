@@ -667,10 +667,158 @@ Object.defineProperty(Object.prototype,
         * Objs created from obj literals use Object.prototype as prototype 
         * Objs created with new use value of prototype property of constructor function as prototype 
         * Objs created with Object.create() use first arg to that fx (which may be null) as prototype
-    * Can query prototype of any object by passing that obj to Object.getPrototypeOf()
+    * Can query prototype of any object by passing that obj to Object.getPrototypeOf(o)
         * ECMAScript 3: o.constructor.prototype 
     * Objs created with new expression usually inherit constructor property that refers to constructor 
     fx used to create obj 
     * Constructor fxs have prototype property that specifies prototype for objs created using that 
     constructor 
+    * Objs created by obj literals or by Object.create() have constructor property that refers to Object()
+    constructor
+        * constructor.prototype refers to correct prototype for obj literals but does not usually do so 
+        for objs created with Object.create() 
+    * To determine whether one obj is prototype of (or is part of prototype chain of) another obj, use 
+    isPrototypeOf() method. To find if p is prototype of o, write p.isPrototypeOf(o) 
+        * isPrototypeOf() performs function similar to instanceof operator */
+var p = {x:1};                    // Define a prototype object.
+var o = Object.create(p);         // Create an object with that prototype.
+p.isPrototypeOf(o)                // => true: o inherits from p
+Object.prototype.isPrototypeOf(o) // => true: p inherits from Object.prototype
+
+/* class attribute: string that provides info about type of obj 
+    * Cannot set this attribute 
+    * Indirectly query it: 
+        * Default toString() method (inherited from Object.prototype) returns string of form 
+        [object class]. Extract eighth through second-to-last characters of returned string.
+        * Many objs inherit other toString() methods. To invoke correct version of toString(), do so 
+        indirectly using Function.call() method 
+    */
+/* classof() function works for any JavaScript value.
+    * Numbers, strings, booleans behave like objs when toString() method invoked on them.
+    * Includes special cases for null, undefined 
+    * Objs created through built-in constructors such as Array and Date have class attributes that match 
+    names of their constructors
+    * Objs created through obj literals or by Object.create have class attribute of "Object." If define 
+    own constructor fx, any objs created with it will have class attribute of "Object": no way to specify 
+    class attribute for your own classes of objs
+    */
+function classof(o) {
+    if (o === null) return "Null";
+    if (o === undefined) return "Undefined";
+    return Object.prototype.toString.call(o).slice(8,-1);
+        // ex: Object.prototype.toString.call(new Date()).slice(8, -1)
+}
+
+classof(null)       // => "Null"
+classof(1)          // => "Number"
+classof("")         // => "String"
+classof(false)      // => "Boolean"
+classof({})         // => "Object"
+classof([])         // => "Array"
+classof(/./)        // => "Regexp"
+classof(new Date()) // => "Date”
+classof(window)     // => "Window" (a client-side host object)
+function f() {};    // Define a custom constructor
+classof(new f());   // => "Object”
+
+/* extensible attribute: specifies whether new properties can be added to obj or not
+    * All built-in and user-defined objs are extensible unless converted to be nonextensible
+    * Extensibility of host objs is implementation defined 
+    * Object.isExtensible
+    * Object.preventExtensions(): makes obj nonextensible
+        * No way to make obj extensible again after making it nonextensible
+        * Only affects extensibility of obj itself. If new props added to prototype of 
+        nonextensible obj, nonextensible obj will inherit those new props 
+    * Purpose is to "lock down" objs into known state, prevent outside tampering
+    * Often used with configurable and writable property attributes; there are functions to 
+    set these attributes together 
+    * Object.seal(): Makes obj nonextensible (like Object.preventExtensions()), also makes all 
+    own properties of that obj nonconfigurable
+        * New props cannot be added to obj
+        * Existing props cannot be deleted or configured, but existing properties that are 
+        writable can still be set
+        * Cannot unseal sealed obj
+    * Object.isSealed()
+    * Object.freeze(): Locks objs down more tightly
+        * Makes obj nonextensible and props nonconfigurable
+        * Makes all of obj's own data props read-only 
+            * Accessor props with setter methods are not affected, can still be invoked by 
+            assignment to prop
+    * Object.isFrozen()
+*/ 
     
+/* Serializing objs 
+    * Obj serialization: Process of converting obj's state to string from which it can later 
+    be restored 
+    * JSON.stringify(), JSON.parse(): Native fxs that serialize, restore JavaScript objs 
+        * These use JSON data interchange format
+        * JSON ("JavaScript Object Notation"): Syntax is similar to that of JavaScript obj 
+        and array literals 
+        * Accept optional 2nd args to customize serialization and/or restoration process by 
+        specifying list of props to be serialized, for ex, or by converting certain values 
+        during serialization or stringification process (e.g., JSON.stringify(o, ['x']))
+    * Can use ECMAScript 5 fxs in ECMAScript 3 with json2.js module
+    * JSON syntax is subset of JavaScript syntax; cannot represent all JavaScript values 
+        * Objs, arrays, strings, finite nums, true, false, null are supported, can be 
+        serialized and restored 
+        NaN, Infinity, -Infinity are serialized to null 
+        * Date objs are serialized to ISO-formatted date strings (see Date.toJSON(); 
+        d = new Date(), d.toJSON()), but JSON.parse() leaves these in string form, does not 
+        restore original Date obj 
+        * Function, RegExp, Error objs, undefined value cannot be serialized or restored 
+            * JSON.stringify() serializes only enumerable own properties of obj. If prop 
+            value cannot be serialized, that prop is omitted from stringified output
+        */
+o = {x:1, y:{z:[false,null,""]}}; // Define a test object
+s = JSON.stringify(o);            // s is '{"x":1,"y":{"z":[false,null,""]}}'
+p = JSON.parse(s);                // p is a deep copy of o
+
+/* Object methods 
+    * All JavaScript objs (except those explictly created without a prototype) inherit props 
+    from Object.prototype. These inherited props are primarily methods.
+        * Universally available 
+    * So far
+        * hasOwnProperty(), propertyIsEnumerable(), isPrototypeOf() methods
+        * Static fxs defined on Object constructor, such as Object.create(),
+        Object.getPrototypeOf() 
+    * Below are universal obj methods that are defined on Object.prototype but are intended 
+    to be overridden by other, more specialized classes
+    */
+/* toString() method: Takes no args; returns string that somehow represents value of obj on 
+which it is invoked 
+    * JavaScript invokes this method of obj whenever it needs to convert obj to str (e.g., 
+    + operator to concatenate str with obj, pass obj to method that expects str)
+    * default toString() method
+        * Doesn't display much useful info; many classes define their own versions of
+        toString() (e.g., convert array or function to string)
+            * Array.toString(), Date.toString(), Function.toString()
+        * Useful for determining class of obj 
+    */
+var s = { x:1, y:1 }.toString();
+    
+/* toLocaleString() method: Returns localized str representation of obj 
+    * All objs have basic toString() method, toLocaleString()
+    * Default method defined by Object doesn't do any localization; calls toString() and 
+    returns that value
+    * Date, Number classes define customized versions of toLocaleString() to format nums, 
+    dates, times according to conventions
+    * Array defines toLocaleString() method that works like toString(), except formats 
+    array elements by calling toLocaleString() methods instead of toString() methods
+    */
+new Date().toString()       // => 'Sat Jun 24 2023 00:12:32 GMT-0400 (Eastern Daylight Time)'
+new Date().toLocaleString()  // => '6/24/2023, 12:12:39 AM'
+    
+/* toJSON() method
+    * Object.prototype does not define toJSON() method 
+    * JSON.stringify() method looks for toJSON() method on any obj it is asked to serialize
+    * If method exists on obj to be serialized, it is invoked, and return value is serialized
+    instead of original obj (e.g., Date.toJSON())
+    */
+/* valueOf() method: Called when JavaScript needs to convert obj to primitive type other than 
+str; typically, a num 
+    * Like toString() method
+    * JavaScript calls this method automatically if obj is used in context where primitive
+    value is required 
+    * Default valueOf() method does nothing interesting, but some of the built-in classes 
+    define their own valueOf() method (Date.valueOf()).
+    */
