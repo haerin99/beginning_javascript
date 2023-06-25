@@ -8,6 +8,7 @@
     elements of same array may be of different types; elements may be objs or other 
     arrays
     * zero-based, 32-bit indexes: index of first element is 0; highest possible
+    index is 2^32 - 2
     * dynamic: grow or shrink as needed; no need to declare fixed size or to 
     reallocate when size changes 
     * sparse: elements need not have contiguous indexes; there may be gaps 
